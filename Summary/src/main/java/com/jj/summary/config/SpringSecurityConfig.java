@@ -1,44 +1,71 @@
 package com.jj.summary.config;
 
-import jakarta.servlet.DispatcherType;
+import com.jj.summary.filter.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import static org.springframework.security.config.Customizer.withDefaults;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
+@RequiredArgsConstructor
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SpringSecurityConfig {
+//    private final UserRepository repository;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
+    private final LogoutHandler logoutHandler;
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http.csrf().disable().cors().disable()
-        http.csrf(AbstractHttpConfigurer::disable)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request
-                                .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                                .anyRequest().permitAll()
-                )
-                .formLogin(login -> login
-//                        .loginPage("/loginPage")
-//                        .loginProcessingUrl("/login-process")
-                        .usernameParameter("userid")
-                        .passwordParameter("pw")
-                        .defaultSuccessUrl("/", true)
-                        .permitAll()
-                )
-                .logout(withDefaults());
+                .sessionManagement((sessionManagement)->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests((authorizeHttpRequests) ->
+                                authorizeHttpRequests
+                                        .requestMatchers(
+                                                new AntPathRequestMatcher("/api/auth/**")
+//                                            "/api/auth/**"
+    //                                        "/api-docs",
+    //                                        "/api-docs",
+    //                                        "/api-docs/**",
+    //                                        "/swagger-resources",
+    //                                        "/swagger-resources/**",
+    //                                        "/configuration/ui",
+    //                                        "/configuration/security",
+    //                                        "/swagger-ui/**",
+    //                                        "/webjars/**",
+    //                                        "/swagger-ui.html"
+                                        ).permitAll()
+                                        .anyRequest().authenticated()
+//                                    .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), MANAGER.name())
+//                                    .requestMatchers(GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), MANAGER_READ.name())
+//                                    .requestMatchers(POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), MANAGER_CREATE.name())
+//                                    .requestMatchers(PUT, "/api/v1/management/**").hasAnyAuthority(ADMIN_UPDATE.name(), MANAGER_UPDATE.name())
+//                                    .requestMatchers(DELETE, "/api/v1/management/**").hasAnyAuthority(ADMIN_DELETE.name(), MANAGER_DELETE.name())
 
-        return http.build();
-    }
+    //                                .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
+    //                                .anyRequest().permitAll()
+                )
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout((logout)-> logout
+                        .logoutUrl("/api/auth/logout")
+                        .addLogoutHandler(logoutHandler)
+                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext()))
+    ;
+
+    return http.build();
+}
 }
