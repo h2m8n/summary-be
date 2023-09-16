@@ -1,7 +1,5 @@
 package com.jj.summary.config;
 
-import com.jj.summary.filter.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -16,6 +14,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import com.jj.summary.filter.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -25,6 +27,7 @@ public class SpringSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final LogoutHandler logoutHandler;
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -35,21 +38,33 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                                 authorizeHttpRequests
                                         .requestMatchers(
-                                                new AntPathRequestMatcher("/api/auth/**")
-//                                            "/api/auth/**"
-    //                                        "/api-docs",
-    //                                        "/api-docs",
-    //                                        "/api-docs/**",
-    //                                        "/swagger-resources",
-    //                                        "/swagger-resources/**",
-    //                                        "/configuration/ui",
-    //                                        "/configuration/security",
-    //                                        "/swagger-ui/**",
-    //                                        "/webjars/**",
-    //                                        "/swagger-ui.html"
+                                                new AntPathRequestMatcher("/api/auth/**"),
+                                                new AntPathRequestMatcher("/api/file/**"),
+                                                new AntPathRequestMatcher("/configuration/ui"),
+                                                new AntPathRequestMatcher("/configuration/security"),
+                                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                                new AntPathRequestMatcher("/swagger-resources"),
+                                                new AntPathRequestMatcher("/swagger-resources/**"),
+                                                new AntPathRequestMatcher("/api-docs"),
+                                                new AntPathRequestMatcher("/api-docs/**"),
+                                                new AntPathRequestMatcher("/swagger-ui.html"),
+                                                new AntPathRequestMatcher("/webjars/**"),
+                                                new AntPathRequestMatcher("/v3/api-docs/**")
+////                                                new AntPathRequestMatcher("/api/file/**")
+////                                            "/api/auth/**"
+//    //                                        "/api-docs",
+//    //                                        "/api-docs",
+//    //                                        "/api-docs/**",
+//    //                                        "/swagger-resources",
+//    //                                        "/swagger-resources/**",
+//    //                                        "/configuration/ui",
+//    //                                        "/configuration/security",
+//    //                                        "/swagger-ui/**",
+//    //                                        "/webjars/**",
+//    //                                        "/swagger-ui.html"
                                         ).permitAll()
+//                                        .anyRequest().authenticated()
                                         .anyRequest().authenticated()
-//                                    .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), MANAGER.name())
 //                                    .requestMatchers(GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), MANAGER_READ.name())
 //                                    .requestMatchers(POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), MANAGER_CREATE.name())
 //                                    .requestMatchers(PUT, "/api/v1/management/**").hasAnyAuthority(ADMIN_UPDATE.name(), MANAGER_UPDATE.name())
